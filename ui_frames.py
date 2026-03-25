@@ -128,9 +128,11 @@ class AdminDashboard(ctk.CTkFrame):
         
         self.tab_manage = self.tabview.add("Manage Buses")
         self.tab_master = self.tabview.add("Master View")
+        self.tab_admins = self.tabview.add("Manage Admins")
         
         self.setup_manage_buses_tab()
         self.setup_master_view_tab()
+        self.setup_manage_admins_tab()
 
     def setup_manage_buses_tab(self):
         # Add Bus Form
@@ -167,6 +169,7 @@ class AdminDashboard(ctk.CTkFrame):
         """Called when the frame is raised to the top."""
         self.refresh_buses_list()
         self.refresh_master_view()
+        self.refresh_admins_list()
 
     def add_bus(self):
         source = self.source_entry.get()
@@ -232,6 +235,78 @@ class AdminDashboard(ctk.CTkFrame):
             
             lbl = ctk.CTkLabel(self.master_scroll_frame, text=booking_text, anchor="w", justify="left")
             lbl.pack(fill="x", padx=10, pady=5)
+
+    def setup_manage_admins_tab(self):
+        # Add Admin Form
+        self.add_admin_frame = ctk.CTkFrame(self.tab_admins)
+        self.add_admin_frame.pack(fill="x", pady=10)
+        
+        self.admin_username_entry = ctk.CTkEntry(self.add_admin_frame, placeholder_text="Username")
+        self.admin_username_entry.grid(row=0, column=0, padx=5, pady=5)
+        
+        self.admin_password_entry = ctk.CTkEntry(self.add_admin_frame, placeholder_text="Password", show="*")
+        self.admin_password_entry.grid(row=0, column=1, padx=5, pady=5)
+        
+        self.admin_confirm_entry = ctk.CTkEntry(self.add_admin_frame, placeholder_text="Confirm Password", show="*")
+        self.admin_confirm_entry.grid(row=0, column=2, padx=5, pady=5)
+        
+        self.add_admin_btn = ctk.CTkButton(self.add_admin_frame, text="Add Admin", command=self.add_admin)
+        self.add_admin_btn.grid(row=0, column=3, padx=5, pady=5)
+
+        # Admin List
+        self.admins_scroll_frame = ctk.CTkScrollableFrame(self.tab_admins, label_text="Existing Admins")
+        self.admins_scroll_frame.pack(fill="both", expand=True, pady=10)
+
+    def add_admin(self):
+        username = self.admin_username_entry.get()
+        password = self.admin_password_entry.get()
+        confirm = self.admin_confirm_entry.get()
+        
+        if not username or not password or not confirm:
+            messagebox.showerror("Error", "All fields are required")
+            return
+            
+        if password != confirm:
+            messagebox.showerror("Error", "Passwords do not match")
+            return
+            
+        success = self.controller.db.register_user(username, password, role="admin")
+        if success:
+            messagebox.showinfo("Success", f"Admin '{username}' added successfully")
+            self.admin_username_entry.delete(0, 'end')
+            self.admin_password_entry.delete(0, 'end')
+            self.admin_confirm_entry.delete(0, 'end')
+            self.refresh_admins_list()
+        else:
+            messagebox.showerror("Error", "Username already exists")
+
+    def delete_admin(self, user_id, username):
+        # Prevent currently logged-in admin from deleting themselves
+        if self.controller.current_user and self.controller.current_user['id'] == user_id:
+            messagebox.showerror("Error", "You cannot delete your own account.")
+            return
+
+        if messagebox.askyesno("Confirm", f"Are you sure you want to delete admin '{username}'?"):
+            self.controller.db.delete_user(user_id)
+            self.refresh_admins_list()
+
+    def refresh_admins_list(self):
+        for widget in self.admins_scroll_frame.winfo_children():
+            widget.destroy()
+            
+        admins = self.controller.db.get_all_admins()
+        for admin in admins:
+            frame = ctk.CTkFrame(self.admins_scroll_frame)
+            frame.pack(fill="x", pady=2)
+            
+            lbl = ctk.CTkLabel(frame, text=f"[{admin['id']}] {admin['username']}")
+            lbl.pack(side="left", padx=10)
+            
+            # Don't show delete button for the current user
+            if self.controller.current_user and self.controller.current_user['id'] != admin['id']:
+                del_btn = ctk.CTkButton(frame, text="Delete", fg_color="red", hover_color="darkred", width=60,
+                                        command=lambda u_id=admin['id'], u_name=admin['username']: self.delete_admin(u_id, u_name))
+                del_btn.pack(side="right", padx=10, pady=5)
 
     def logout(self):
         self.controller.current_user = None

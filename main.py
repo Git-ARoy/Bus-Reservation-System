@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import customtkinter
 from database import DatabaseManager
 from ui_frames import LoginFrame, RegisterFrame, AdminDashboard, CustomerDashboard

@@ -55,10 +55,12 @@ class DatabaseManager:
             # Create a default admin user if none exists
             cursor.execute("SELECT COUNT(*) as count FROM Users WHERE role = 'admin'")
             if cursor.fetchone()['count'] == 0:
-                admin_hash = hash_password("admin123")
+                admin_user = os.environ.get("ADMIN_USERNAME", "admin")
+                admin_pass = os.environ.get("ADMIN_PASSWORD", "admin123")
+                admin_hash = hash_password(admin_pass)
                 cursor.execute(
                     "INSERT INTO Users (username, password_hash, role) VALUES (?, ?, ?)",
-                    ("admin", admin_hash, "admin")
+                    (admin_user, admin_hash, "admin")
                 )
             conn.commit()
 
@@ -89,6 +91,18 @@ class DatabaseManager:
             if row:
                 return dict(row)
             return None
+
+    def get_all_admins(self):
+        """Returns all admin users."""
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT id, username, role FROM Users WHERE role = 'admin' ORDER BY username")
+            return [dict(row) for row in cursor.fetchall()]
+
+    def delete_user(self, user_id):
+        """Deletes a user by their ID."""
+        with self.get_connection() as conn:
+            conn.execute("DELETE FROM Users WHERE id = ?", (user_id,))
+            conn.commit()
 
     # --- Bus Management ---
     def add_bus(self, source, destination, date, time, total_seats):
