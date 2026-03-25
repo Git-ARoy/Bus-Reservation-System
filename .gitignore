@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+path/to/venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs and local runtime files
+*.log
+
+# Database files
+*.db
+
+# IDE settings
+.vscode/
+
+# OS files
+.DS_Store

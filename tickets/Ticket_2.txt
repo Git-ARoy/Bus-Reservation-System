@@ -1,0 +1,14 @@
+
+========================================
+         BUS RESERVATION TICKET         
+========================================
+Booking ID  : 2
+Generated On: 2026-03-25 20:32:52
+----------------------------------------
+Passenger   : Ankit
+Route       : Anekal to Majestic
+Date & Time : 26/02/2026 12:00PM
+Seat Number : 8
+========================================
+    Thank you for choosing our service!
+========================================
